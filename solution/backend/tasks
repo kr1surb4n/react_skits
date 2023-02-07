@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ "${TRACE-0}" == "1" ]]; then
+    set -o xtrace
+fi
+
+if [[ "${1-}" =~ ^-*h(elp)?$ ]]; then
+    echo 'Usage: ./script.sh one two'
+    exit
+fi
+
+# now you can link this file and all the commands you run
+# will think that are in separate folders
+cd "$(dirname "$0")"
+
+
+AUTOCOMPLETE_WORDS="${AUTOCOMPLETE_WORDS:-} mypath"
+
+
+function shortlist { # of functions inside this script, for autocomplete
+   echo $AUTOCOMPLETE_WORDS \
+        start_project \
+        make_schema_definitions \
+        add_prisma make_first_migration \
+        generate_schema_and_types \
+        run_eslint_fix run_eslint watch_js_linters \
+        start_dev_server \
+        mypath 
+
+}
+
+function start_project {
+	npm init -y
+	npm install --save-dev typescript ts-node-dev
+	touch tsconfig.json
+
+    npm install apollo-server graphql nexus
+
+    mkdir src
+    touch src/schema.ts src/index.ts
+
+}
+
+function add_prisma {
+    npm install prisma --save-dev
+    npm install @prisma/client
+    npx prisma init
+}
+
+function make_first_migration {
+    npx prisma migrate dev --name "init"
+}
+
+function regenerate_prisma_client {
+    npx prisma generate
+}
+
+function make_schema_definitions {
+    mkdir src/graphql 
+    touch src/graphql/Link.ts
+    touch src/graphql/index.ts
+}
+
+# generate schema and types based on the schema.ts file
+function generate_schema_and_types {
+    npx ts-node --transpile-only src/schema
+    # npm run generate
+}
+
+
+function run_eslint_fix {
+    npm run lint -- --fix
+}
+
+function run_eslint {
+    run_eslint_fix
+    npm run lint
+}
+
+function watch_js_linters {
+    watchexec -e js,ts -d 800 -w . ./tasks run_eslint
+}
+
+function start_dev_server {
+    npm run dev # will watch for changes
+}
+
+function mypath {
+   pwd
+}
+
+"$@"
+

@@ -5,10 +5,12 @@ import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-co
 
 // 1. Get the schema 
 import { schema } from "./schema";
+import { context } from "./context";   
 
 // 2. Put the schema into ApolloServer
 export const server = new ApolloServer({
     schema,
+    context,
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 
 });

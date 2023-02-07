@@ -1,36 +1,30 @@
 import { extendType, nonNull, objectType, stringArg, intArg } from "nexus";   
 import { NexusGenObjects } from "../../nexus-typegen";  
-const _ = require('lodash');
+import * as _ from "lodash";
 
-export const Link = objectType({
-    name: "Link", // 1 
-    definition(t) {  // 2
-        t.nonNull.int("id"); // 3 
-        t.nonNull.string("description"); // 4
-        t.nonNull.string("url"); // 5 
+export const Link = objectType({                    // Type definition
+    name: "Link",                                   // name of the type
+    definition(t) {                                 // definition start:
+        t.nonNull.int("id");                        //      id field 
+        t.nonNull.string("description");            //      description field
+        t.nonNull.string("url");                    //      url field 
     },
 });
 
-const links: NexusGenObjects["Link"][]= [   // 1
-    {
-        id: 1,
-        url: "www.howtographql.com",
-        description: "Fullstack tutorial for GraphQL",
-    },
-    {
-        id: 2,
-        url: "graphql.org",
-        description: "GraphQL official website",
-    },
-];
-
-export const FeedQuery = extendType({  // 2
+export const FeedQuery = extendType({  // extend the Query root type
     type: "Query",
     definition(t) {
-        t.nonNull.list.nonNull.field("feed", {   // 3
+        t.nonNull.list.nonNull.field("feed", {   // add a filed feed to it
             type: "Link",
-            resolve(parent, args, context, info) {    // 4
-                return links;
+            resolve(parent, args, context, info) {    // resolver function - implementation of the filed
+                // parent - the results of the parent query resolver
+                // args - the arguments, an object
+                // context - the context object injected by the apollo, can have goodies
+
+
+                // prisma returns a promise
+                // apollo is handling the promises
+                return context.prisma.link.findMany();
             },
         });
     },
@@ -45,8 +39,11 @@ export const LinkQuery = extendType({  // 2
                 id: nonNull(intArg())
             },
             resolve(parent, {id}, context, info) {    // 4
-                const found = _.find(links, (item) => { return item.id == id;});
-                console.log(found);
+                const found = context.prisma.link.findUnique({
+                    where: {
+                      id: id,
+                    },
+                  })
                 return found;
             },
         });
@@ -54,27 +51,29 @@ export const LinkQuery = extendType({  // 2
 });
 
 
-export const LinkMutation = extendType({  // 1
+export const LinkMutation = extendType({  // extend the Mutation type
     type: "Mutation",    
     definition(t) {
-        t.nonNull.field("post", {  // 2
-            type: "Link",  
-            args: {   // 3
+        t.nonNull.field("post", {  // name of the mutation is post on object Link, you cant return null and
+            type: "Link",          // you have to return a Link
+            args: {   // the arguments post(description: X, url: Y)
                 description: nonNull(stringArg()),
                 url: nonNull(stringArg()),
             },
-            
+              
             resolve(parent, args, context) {    
-                const { description, url } = args;  // 4
+                const { description, url } = args;  // expand on arguments
+
+                const newLink = context.prisma.link.create({   // do an insert
+                    data: {
+                        description: description,
+                        url: url,
+                    },
+                });
                 
-                const idCount = links.length + 1;  // 5
-                const link = {
-                    id: idCount,
-                    description: description,
-                    url: url,
-                };
-                links.push(link);
-                return link;
+                // return just added object,do it 
+                return newLink;
+                    
             },
         });
         t.nonNull.field("updateLink", {  // 2
@@ -86,11 +85,17 @@ export const LinkMutation = extendType({  // 1
             },
             
             resolve(parent, { id, url, description }, context) {    
-                const link = _.find(links,{'id': id});
 
-                link.url = url;
-                link.description = description;
-                
+                const link = context.prisma.link.update({
+                    where: {
+                      id: id,
+                    },
+                    data: {
+                        url: url,
+                        description: description
+                    },
+                  })
+
                 return link;
             },
         });
@@ -101,15 +106,15 @@ export const LinkMutation = extendType({  // 1
             },
             
             resolve(parent, {id}, context) {    
-                const removed_links = _.remove(links, function(link) {
-                    return link.id == id
-                 });
 
-                if (removed_links.length == 1) {
-                    return removed_links[0];
-                }
+
+                const deletedLink = context.prisma.link.delete({
+                    where: {
+                      id:  id,
+                    },
+                  })
                
-                return removed_links;
+                return deletedLink;
             },
         });
     },
