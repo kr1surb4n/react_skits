@@ -11,7 +11,12 @@ const Header = () => {
       <div className="flex flex-fixed black">
         <Link to="/" className="no-underline black">
           <div className="fw7 mr1">Hacker News</div>
+        </Link>
+        <div className="ml1">|</div>
+        <Link to="/top" className="ml1 no-underline black">
+          top
         </Link>        
+        <div className="ml1">|</div>
         <Link to="/" className="ml1 no-underline black">
           new
         </Link>
@@ -30,7 +35,7 @@ const Header = () => {
           search
         </Link>
 
-
+      
         <div className="flex flex-fixed">
         {authToken ? (
           <div

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { FEED_QUERY } from './LinkList';
-
+import { AUTH_TOKEN, LINKS_PER_PAGE } from '../constants';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, gql } from '@apollo/client';
 
@@ -32,21 +32,37 @@ const CreateLink = () => {
       description: formState.description,
       url: formState.url
     },
-    update: (cache, { data: { post } }) => {
-        const data = cache.readQuery({
-          query: FEED_QUERY,
-        });
-  
-        cache.writeQuery({
-          query: FEED_QUERY,
-          data: {
-            feed: {
-              links: [post, ...data.feed.links]
-            }
-          },
-        });
-      },
-    onCompleted: () => navigate('/')
+    update: (cache, {data: {post}}) => {
+      const take = LINKS_PER_PAGE;
+      const skip = 0;
+      const orderBy = {createdAt: 'desc'};
+
+      const data = cache.readQuery({
+        query: FEED_QUERY,
+        variables: {
+          take,
+          skip,
+          orderBy
+        }
+      });
+
+      cache.writeQuery({
+        query: FEED_QUERY,
+        data: {
+          feed: {
+            links: [post, ...data.feed.links]
+          }
+        },
+        variables: {
+          take,
+          skip,
+          orderBy
+        }
+      });
+    },
+    onCompleted: () => {
+      navigate("/")
+    }
   });
 
   return (
