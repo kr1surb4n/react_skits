@@ -1,11 +1,26 @@
-import { objectType, extendType, nonNull, intArg } from "nexus";
+import { objectType, extendType, nonNull, idArg } from "nexus";
 import { User } from "@prisma/client";
 
 export const Vote = objectType({  // union type of Link and User
     name: "Vote",
     definition(t) {
-        t.nonNull.field("link", { type: "Link" });
-        t.nonNull.field("user", { type: "User" });
+        t.nonNull.int("id");
+        t.nonNull.field("link", { 
+            type: "Link", 
+            resolve(parent, args, context) {   // write a resolver for the links
+                return context.prisma.vote     // the parten is the vote
+                    .findUnique({ where: { id: parent.id }})  // so, hey get me, and then my related object
+                    .link();
+            }
+        });
+        t.nonNull.field("user", {  
+            type: "User",
+            resolve(parent, args, context) {   // write a resolver for the user
+                return context.prisma.vote     // the parent is the vote
+                    .findUnique({ where: { id: parent.id }})
+                    .user();
+            }
+        });
     },
 });
 
@@ -15,7 +30,7 @@ export const VoteMutation = extendType({
         t.field("vote", {
             type: "Vote",
             args: {
-                linkId: nonNull(intArg()),
+                linkId: nonNull(idArg()),
             },
             async resolve(parent, args, context) {
                 const { userId } = context;
@@ -25,26 +40,32 @@ export const VoteMutation = extendType({
                     throw new Error("Cannot vote without logging in.");
                 }
 
-                const link = await context.prisma.link.update({  // 2
+                const vote = await context.prisma.vote.findUnique({
                     where: {
-                        id: linkId
-                    },
-                    data: {
-                        voters: {
-                            connect: {
-                                id: userId
-                            }
-                        }
+                      linkId_userId: {
+                        linkId: linkId,
+                        userId: userId
+                      }
                     }
-                })
+                  });
+                
+                  if (vote) {
+                    throw new Error(
+                      `Already voted for link: ${linkId}`
+                    );
+                  }
 
-                const user = await context.prisma.user.findUnique({ where: { id: userId } });
 
-                return {  // prisma returns User|null,so cast it to User
-                    link,
-                    user: user as User
-                };
-            },
+
+                const new_vote = context.prisma.vote.create({   // do an insert
+                    data: {
+                        link: { connect: { id: linkId } },
+                        user: { connect: { id: userId } }
+                    },
+                });
+
+                return new_vote;
+            }
         })
     }
 })

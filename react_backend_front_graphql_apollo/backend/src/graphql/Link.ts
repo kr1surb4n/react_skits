@@ -1,4 +1,4 @@
-import { extendType, nonNull, objectType, stringArg, intArg, inputObjectType, enumType, arg, list } from "nexus";
+import { extendType, nonNull, objectType, stringArg, intArg,idArg,  inputObjectType, enumType, arg, list } from "nexus";
 import { Prisma } from "@prisma/client"
 
 export const Feed = objectType({
@@ -28,7 +28,7 @@ export const Sort = enumType({
 export const Link = objectType({                    // Type definition
     name: "Link",                                   // name of the type
     definition(t) {                                 // definition start:
-        t.nonNull.int("id");                        //      id field 
+        t.nonNull.id("id");                        //      id field 
         t.nonNull.string("description");            //      description field
         t.nonNull.string("url");                    //      url field 
         t.nonNull.dateTime("createdAt");            //      createdAt field
@@ -40,12 +40,14 @@ export const Link = objectType({                    // Type definition
                     .postedBy();
             },
         });
-        t.nonNull.list.nonNull.field("voters", {  // 1
-            type: "User",
+        t.nonNull.list.nonNull.field("votes", {  // 1
+            type: "Vote",
             resolve(parent, args, context) {
-                return context.prisma.link
-                    .findUnique({ where: { id: parent.id } })
-                    .voters();
+                const votes =  context.prisma.link
+                .findUnique({ where: { id: parent.id } })
+                .votes();
+                console.log(votes);
+                return votes;
             }
         });
     },
@@ -109,7 +111,7 @@ export const LinkQuery = extendType({  // 2
         t.nonNull.field("link", {   // 3
             type: "Link",
             args: {
-                id: nonNull(intArg())
+                id: nonNull(idArg())
             },
             resolve(parent, {id}, context, info) {    // 4
                 const found = context.prisma.link.findUnique({
@@ -158,7 +160,7 @@ export const LinkMutation = extendType({  // extend the Mutation type
         t.nonNull.field("updateLink", {  // 2
             type: "Link",  
             args: {   // 3
-                id: nonNull(intArg()),
+                id: nonNull(idArg()),
                 url: nonNull(stringArg()),
                 description: nonNull(stringArg()),
             },
@@ -181,7 +183,7 @@ export const LinkMutation = extendType({  // extend the Mutation type
         t.field("deleteLink", {  // 2
             type: "Link",  
             args: {   // 3
-                id:  nonNull(intArg()),
+                id:  nonNull(idArg()),
             },
             
             resolve(parent, {id}, context) {    

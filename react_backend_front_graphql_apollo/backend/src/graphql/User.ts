@@ -3,7 +3,7 @@ import { extendType, nonNull, objectType, stringArg, intArg } from "nexus";
 export const User = objectType({
     name: "User",
     definition(t) {
-        t.nonNull.int("id");
+        t.nonNull.id("id");
         t.nonNull.string("name");
         t.nonNull.string("email");
         t.nonNull.list.nonNull.field("links", {    // this is field with all the links of the user

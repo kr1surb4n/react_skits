@@ -7,7 +7,7 @@ export const prisma = new PrismaClient();
 
 export interface Context {    // define the interface of the Contentx
     prisma: PrismaClient;
-    userId?: number;
+    userId?: string;
 }
 
 // define it as a function, that takes the request as argument

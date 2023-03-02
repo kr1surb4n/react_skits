@@ -15,7 +15,7 @@ import { objectType } from "nexus";
 export const Photo = objectType({
     name: "Photo", // 1 
     definition(t) {  // 2
-        t.nonNull.string("id"); // 3 
+        t.nonNull.id("id"); // 3 
         t.string("description"); // 4
         t.nonNull.string("url"); // 5 
         t.nonNull.string("link"); // 5 

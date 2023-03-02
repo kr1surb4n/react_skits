@@ -13,6 +13,4 @@ the one used by the frontend tutorial, so this has to be fixed.
 This backed has been ported to be exact as the backend used for the
 frontend tutorial. 
 
-About the example Prism schema. The IDs are defined as UUID ver 4.
-This is an overkill for such a database and a solution. This is an
-example for using the globally universal id. 
+About the example Prism schema. The IDs for User and the Link are defined as UUID ver 4. In terms of SQL db it is not ok, a plain string as an id. For an example it is ok. Postgresql has uuid() type. Mysql will use varchar. Sqlite has TEXT. In terms of graphql this is an example for using the globally universal id.
