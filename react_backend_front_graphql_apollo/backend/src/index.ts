@@ -11,7 +11,9 @@ import { context } from "./context";
 export const server = new ApolloServer({
     schema,
     context,
-    introspection: true,                                      //
+    cache: "bounded", // this prevents server from DOS attacks,
+    csrfPrevention: true,  // default in Apollo 4
+    // introspection: true, // it is by default true, unless you set NODE_ENV to production
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 
 });

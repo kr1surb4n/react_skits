@@ -62,13 +62,30 @@ export const FeedQuery = extendType({  // extend the Query root type
                 filter: stringArg(),   // 1
                 skip: intArg(),   // skip n-elements
                 take: intArg(),   // take n-elements
-                orderBy: arg({ type: list(nonNull(LinkOrderByInput)) }),  // 1
+
+                // it is a list -  allows to give more fields to the ordeby by clause
+                // originally was a single element
+                orderBy: arg({ type: list(nonNull(LinkOrderByInput)) }), 
             },
             async resolve(parent, args, context) { // resolver function - implementation of the filed
                 // parent - the results of the parent query resolver
                 // args - the arguments, an object
                 // context - the context object injected by the apollo, can have goodies
-
+                
+                // info - the object with info that has following fields:
+                // from: https://github.com/graphql/graphql-js/blob/f851eba93167b04d6be1373ff27927b16352e202/src/type/definition.ts#L891-L902
+                // export interface GraphQLResolveInfo {
+                //     readonly fieldName: string;
+                //     readonly fieldNodes: ReadonlyArray<FieldNode>;
+                //     readonly returnType: GraphQLOutputType;
+                //     readonly parentType: GraphQLObjectType;
+                //     readonly path: Path;
+                //     readonly schema: GraphQLSchema;
+                //     readonly fragments: ObjMap<FragmentDefinitionNode>;
+                //     readonly rootValue: unknown;
+                //     readonly operation: OperationDefinitionNode;
+                //     readonly variableValues: { [variable: string]: unknown };
+                // }
 
                 // prisma returns a promise
                 // apollo is handling the promises
